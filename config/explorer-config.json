@@ -1,0 +1,9 @@
+{
+	"network-configs": {
+		"dev-network": {
+			"name": "dev",
+			"profile": "profiles/dev.json"
+		}
+	}
+}
+

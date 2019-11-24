@@ -1,0 +1,118 @@
+version: '2.4'
+
+services:
+  orderer:
+    container_name: orderer
+    image: hyperledger/fabric-orderer:1.4.3
+    environment:
+      - FABRIC_LOGGING_SPEC=info
+      - ORDERER_GENERAL_LISTENADDRESS=orderer
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=orderer.block
+      - ORDERER_GENERAL_LOCALMSPID=SampleOrg
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/msp
+      - GRPC_TRACE=all=true
+      - GRPC_VERBOSITY=info
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+      - ./config/orderers/orderer/msp:/etc/hyperledger/msp
+      - ./orderer.block:/etc/hyperledger/fabric/orderer.block
+    ports:
+      - 7050:7050
+
+  peer:
+    container_name: peer
+    image: hyperledger/fabric-peer:1.4.3
+    environment:
+      - CORE_PEER_ID=peer
+      - CORE_PEER_ADDRESS=peer:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer:7051
+      - CORE_PEER_LOCALMSPID=SampleOrg
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb:5984
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./config/peers/peer/msp:/etc/hyperledger/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start --peer-chaincodedev=true
+    ports:
+      - 7051:7051
+      - 7052:7052
+    depends_on:
+      - orderer
+      - couchdb
+
+  cli:
+    container_name: cli
+    # https://hub.docker.com/repository/docker/zoidenberg/fabric-tools
+    image: zoidenberg/fabric-tools:1.4.3
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer:7051
+      - CORE_PEER_LOCALMSPID=SampleOrg
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/users/root/msp
+    working_dir: /opt/gopath/src/chaincodedev
+    command: /bin/bash -c './script.sh'
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./config/users/:/etc/hyperledger/users
+      - ./:/opt/gopath/src/chaincodedev/
+    depends_on:
+      - peer
+
+  couchdb:
+    container_name: couchdb
+    image: hyperledger/fabric-couchdb:latest
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    ports:
+      - "5984:5984"
+
+  listener:
+    container_name: listener
+    image: zoidenberg/listener:latest
+    command: ["node", "/etc/hyperledger/events.js", "${CC_NAME:-token}", "${EVENT_NAME:-InvokeTokenEvent}"]
+    volumes:
+      - ./events.js:/etc/hyperledger/events.js
+      - ./config/profiles:/etc/hyperledger/profiles
+      - ./config/users:/etc/hyperledger/users
+
+  explorerdb:
+    image: hyperledger/explorer-db:latest
+    container_name: explorerdb
+    hostname: explorerdb
+    environment:
+      - DATABASE_DATABASE=fabricexplorer
+      - DATABASE_USERNAME=hppoc
+      - DATABASE_PASSWORD=password
+    volumes:
+      - ./config/explorer-db/createdb.sh:/docker-entrypoint-initdb.d/createdb.sh
+      - ./config/explorer-db:/opt
+
+  explorer:
+    image: hyperledger/explorer:latest
+    container_name: explorer
+    hostname: explorer
+    environment:
+      - DATABASE_HOST=explorerdb
+      - DATABASE_USERNAME=hppoc
+      - DATABASE_PASSWD=password
+      - DISCOVERY_AS_LOCALHOST=false
+    volumes:
+      - ./config/explorer-config.json:/opt/explorer/app/platform/fabric/config.json
+      - ./config/profiles:/opt/explorer/app/platform/fabric/profiles
+      - ./config/users:/etc/hyperledger/users
+    command: sh -c "sleep 16 && node /opt/explorer/main.js && tail -f /dev/null"
+    ports:
+      - 8080:8080
+    depends_on:
+      - explorerdb

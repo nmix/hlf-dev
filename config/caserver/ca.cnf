@@ -1,0 +1,16 @@
+[req]
+distinguished_name     = req_distinguished_name
+x509_extensions        = v3_ca
+prompt                 = no
+
+[req_distinguished_name]
+countryName            = RU
+stateOrProvinceName    = Krasnodar
+organizationName       = SampleCA
+commonName             = ca.sample.com
+
+[v3_ca]
+keyUsage                = critical, digitalSignature, keyEncipherment, keyCertSign, cRLSign
+extendedKeyUsage        = clientAuth, serverAuth
+basicConstraints        = critical, CA:TRUE
+subjectKeyIdentifier    = hash
