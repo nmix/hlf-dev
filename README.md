@@ -50,10 +50,10 @@ The following scripts will be used in sections below:
 System requirements:
 
 * Ubuntu (tested on version Ubuntu Desktop 19.04 x64)
-* go 1.11+
-* docker
-* docker-compose
-* parallel (if you need to run multiple chain codes in parallel)
+* go 1.11+ and following packages: `github.com/golang/protobuf/protoc-gen-go`, `github.com/hyperledger/fabric-chaincode-go/shim`,  `github.com/hyperledger/fabric-protos-go/peer`
+* docker 18.09+
+* docker-compose 1.22+
+* parallel (if you need to run multiple chain codes in parallel) https://www.gnu.org/software/parallel/
 
 ### Run Simple Chaincode
 
@@ -288,7 +288,7 @@ cd $GOPATH/src
 mkdir cid
 cd cid
 ```
-Add git module * dev-mode *
+Add git module *dev-mode*
 ```bash
 git init
 git submodule add https://github.com/nmix/hlf-dev.git dev-mode
@@ -323,8 +323,8 @@ cd dev-mode
 # GerID() =              eDUwOTo6Q049cm9vdCxPVT11c2VyK09VPVNhbXBsZU9yZyxPPUh5cGVybGVkZ2VyLFNUPU5vcnRoIENhcm9saW5hLEM9VVM6OkNOPWNhLnNhbXBsZS5jb20sTz1TYW1wbGVDQSxTVD1LcmFzbm9kYXIsQz1SVQ==
 # GetMSPID() =           SampleOrg
 # hf.Affiliation =       SampleOrg
-# hf.EnrollmentID =      root
-# hf.Type =              user
+# hf.EnrollmentID =      root		<--------------------------
+# hf.Type =              user		<--------------------------
 # app.accounting.role =  
 # department =           
 
@@ -342,10 +342,10 @@ cd dev-mode
 # Terminal 1
 #
 # ...
-# hf.EnrollmentID =      mary
-# hf.Type =              user
-# app.accounting.role =  manager
-# department =           accounting
+# hf.EnrollmentID =      mary		<--------------------------
+# hf.Type =              user		<--------------------------
+# app.accounting.role =  manager	<--------------------------
+# department =           accounting	<--------------------------
 # ...
 
 # Terminal 2
@@ -427,8 +427,6 @@ docker run --rm -it \
 ```
 
 ### MSP Generation
-
-Сертификаты *dev-mode* сгененрированы при помощи *Fabric-CA*, а не с использованием утилиты *cryptogen*.
 
 *Dev-mode* certificates are generated using *Fabric-CA*, and not using the *cryptogen* utility. The following are the commands used to create msp for nodes and users
 

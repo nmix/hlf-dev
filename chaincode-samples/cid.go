@@ -12,7 +12,7 @@ import (
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-protos-go/peer"
 	// Client Identity Library
-	"github.com/hyperledger/fabric-chaincode-go/shim/pkg/cid"
+	"github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 )
 
 // CidChaincode Represents our chaincode object
